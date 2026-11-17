@@ -314,6 +314,14 @@ export function createHud(callbacks) {
       }, ms || 2500);
     },
 
+    hideBanner() {
+      const banner = el('banner');
+      if (!banner) return;
+      if (bannerTimer) clearTimeout(bannerTimer);
+      banner.classList.remove('on');
+      hide(banner);
+    },
+
     // mode: 'menu' | 'paused' | 'roundEnd' | 'matchEnd'. data carries
     // { title, copy } or, for matchEnd, { winner, ember, slate }.
     showOverlay(mode, data) {

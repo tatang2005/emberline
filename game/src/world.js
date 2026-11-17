@@ -338,10 +338,10 @@ export function createWorld(scene) {
   };
 
   // --- Lighting ---------------------------------------------------------------
-  const hemi = new THREE.HemisphereLight(0xffe0b8, 0x241a12, 0.55);
+  const hemi = new THREE.HemisphereLight(0xffe0b8, 0x241a12, 0.9);
   group.add(hemi);
 
-  const key = new THREE.DirectionalLight(0xffc07a, 1.6);
+  const key = new THREE.DirectionalLight(0xffc07a, 2.2);
   key.position.set(14, 22, 10);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
@@ -355,7 +355,7 @@ export function createWorld(scene) {
   group.add(key);
   group.add(key.target);
 
-  const fill = new THREE.DirectionalLight(0x7fa8c9, 0.45);
+  const fill = new THREE.DirectionalLight(0x7fa8c9, 0.7);
   fill.position.set(-12, 14, -8);
   group.add(fill);
   group.add(fill.target);

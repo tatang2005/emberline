@@ -40,7 +40,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'hi
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 document.getElementById('game').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -251,7 +251,7 @@ function setupRound() {
   }
   objective.reset();
   player.reset(world.spawns.ember[0].x, world.spawns.ember[0].z);
-  player.state.yaw = Math.PI; // face north, up the map
+  player.state.yaw = 0; // face north (-z), up the map toward the sites
   bots.spawnRound(rounds.state.round);
   hud.hideOverlay();
   hud.setHint('');
@@ -293,7 +293,9 @@ function endRound(winner, reason) {
 }
 
 rounds.onEvent = (event) => {
-  if (event.type === 'buyEnd' && rounds.state.phase === 'buy') {
+  if (event.type === 'buyEnd') {
+    // rounds.js fires this after it already flipped phase to 'live',
+    // so do not re-check the phase here — just close the shop.
     hud.closeBuy();
     hud.showBanner(`Round ${rounds.state.round}`, 'Plant the Spark at Furnace or Crane Yard', 2400);
     syncHud();
@@ -476,10 +478,8 @@ function handleKeys() {
   if (keys.has('KeyR')) weapons.reload();
   for (const code of input.state.pressed) {
     if (code === 'KeyB') {
-      if (rounds.state.phase === 'buy') {
-        if (hud.isBuyOpen()) hud.closeBuy();
-        else openBuyMenu();
-      }
+      if (hud.isBuyOpen()) hud.closeBuy();
+      else if (rounds.state.phase === 'buy') openBuyMenu();
     } else if (code === 'KeyQ') {
       const order = ['smoke', 'flash', 'he'];
       match.grenade = order[(order.indexOf(match.grenade) + 1) % order.length];
@@ -650,6 +650,7 @@ function runShot(name) {
   hud.closeBuy();
   if (name === 'start') {
     rounds.state.phase = 'menu';
+    rounds.state.timer = 100;
     player.reset(world.spawns.ember[0].x, world.spawns.ember[0].z);
     player.state.yaw = Math.PI * 0.92;
     settle(20);
@@ -658,6 +659,8 @@ function runShot(name) {
     hud.showOverlay('menu', {});
   } else if (name === 'play') {
     startMatch();
+    hud.closeBuy();
+    hud.hideBanner();
     rounds.state.phase = 'live';
     rounds.state.timer = 87;
     player.reset(-2, 6);
@@ -682,11 +685,13 @@ function runShot(name) {
     startMatch();
     openBuyMenu();
     player.reset(world.spawns.ember[0].x, world.spawns.ember[0].z);
-    player.state.yaw = Math.PI;
+    player.state.yaw = 0;
     settle(20);
     aimAt(new THREE.Vector3(0, 1.6, -8));
   } else if (name === 'end') {
     startMatch();
+    hud.closeBuy();
+    hud.hideBanner();
     rounds.state.phase = 'live';
     rounds.state.ember = 7;
     rounds.state.slate = 5;
@@ -700,6 +705,8 @@ function runShot(name) {
     objective.state.site = 'A';
     objective.state.detonateIn = 4;
     hud.showBanner('Spark detonated', 'Ember takes the round', 60000);
+    // Face the blast: the explosion and the furnace must be in frame.
+    aimAt(new THREE.Vector3(site.x, 1.4, site.z));
     settle(6);
   }
   syncHud();

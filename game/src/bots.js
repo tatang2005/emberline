@@ -407,7 +407,7 @@ export function createBots(scene, world, characters, random) {
   }
 
   function hitChance(bot, dist, targetMoving, targetCrouching) {
-    let p = 0.62 - dist * 0.008;
+    let p = 0.5 - dist * 0.008;
     if (targetMoving) p -= 0.15;
     if (targetCrouching) p -= 0.1;
     if (dist > 20) p -= 0.12;
@@ -461,6 +461,10 @@ export function createBots(scene, world, characters, random) {
     if (!hit) return;
     let dmg = def.damage;
     if (head) dmg *= HEAD_MULT;
+    // Bots hit softer than the numbers say: the player should survive a
+    // few seconds of exposure, and bot-vs-bot fights should last long
+    // enough to feel like a round instead of a coin flip.
+    dmg *= bot.target.kind === 'player' ? 0.55 : 0.7;
     if (bot.target.kind === 'player') {
       if (ctx.damagePlayer) ctx.damagePlayer(dmg, bp);
     } else {
@@ -570,7 +574,7 @@ export function createBots(scene, world, characters, random) {
           bot.burstLeft--;
           bot.nextShotAt = time + 0.11;
           if (bot.burstLeft <= 0) {
-            bot.burstPauseUntil = time + 0.5 + rand() * 0.4;
+            bot.burstPauseUntil = time + 0.9 + rand() * 0.6;
           }
         }
       }
